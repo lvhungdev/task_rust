@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::error::Result;
 use crate::file::JsonSerializer;
 
 #[derive(Serialize, Deserialize)]
@@ -37,30 +38,33 @@ impl fmt::Display for Task {
 }
 
 impl JsonSerializer for Task {
-    fn to_json(&self) -> String {
-        // TODO handle errors
-        return serde_json::to_string(self).unwrap();
+    fn to_json(&self) -> Result<String> {
+        let json: String = serde_json::to_string(self)?;
+
+        return Ok(json);
     }
 
-    fn from_json(json: &str) -> Self {
-        // TODO handle errors
-        return serde_json::from_str(json).unwrap();
+    fn from_json(json: &str) -> Result<Self> {
+        let data: Self = serde_json::from_str(json)?;
+
+        return Ok(data);
     }
 }
 
 impl JsonSerializer for Vec<Task> {
-    fn to_json(&self) -> String {
-        // TODO handle errors
-        return serde_json::to_string(self).unwrap();
+    fn to_json(&self) -> Result<String> {
+        let json: String = serde_json::to_string(self)?;
+
+        return Ok(json);
     }
 
-    fn from_json(json: &str) -> Self {
-        // TODO handle errors
-
-        return if json.is_empty() {
+    fn from_json(json: &str) -> Result<Self> {
+        let data = if json.is_empty() {
             Vec::new()
         } else {
-            serde_json::from_str(json).unwrap()
+            serde_json::from_str(json)?
         };
+
+        return Ok(data);
     }
 }

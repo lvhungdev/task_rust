@@ -5,8 +5,10 @@ use crate::error::Result;
 pub struct FileUtils;
 
 pub trait JsonSerializer {
-    fn to_json(&self) -> String;
-    fn from_json(json: &str) -> Self;
+    fn to_json(&self) -> Result<String>;
+    fn from_json(json: &str) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 impl FileUtils {
@@ -14,19 +16,21 @@ impl FileUtils {
     where
         T: JsonSerializer,
     {
-        // TODO handle errors
         // TODO handle create file if not exist
 
         let json: String = fs::read_to_string(path)?;
+        let data: T = T::from_json(&json)?;
 
-        return Ok(T::from_json(&json));
+        return Ok(data);
     }
 
-    pub fn save<T>(path: &str, data: &T)
+    pub fn save<T>(path: &str, data: &T) -> Result<()>
     where
         T: JsonSerializer,
     {
-        // TODO handle errors
-        let _ = fs::write(path, data.to_json());
+        let json: String = data.to_json()?;
+        fs::write(path, json)?;
+
+        return Ok(());
     }
 }

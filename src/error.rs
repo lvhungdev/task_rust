@@ -1,19 +1,37 @@
-use std::{convert, io, result};
+use std::{convert, fmt, io, result};
 
+#[derive(Debug)]
 pub struct Error(ErrorKind);
 
+#[derive(Debug)]
 pub enum ErrorKind {
-    Json,
-    Io,
+    Json(String),
+    Io(String),
 }
 
 pub type Result<T> = result::Result<T, Error>;
 
-impl<T> convert::From<io::Result<T>> for Result<T> {
-    fn from(value: io::Result<T>) -> Self {
-        return match value {
-            Ok(v) => Ok(v),
-            io::Error => Error(ErrorKind::Io),
+impl convert::From<io::Error> for Error {
+    fn from(value: io::Error) -> Self {
+        return Error(ErrorKind::Io(value.kind().to_string()));
+    }
+}
+
+impl convert::From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        return Error(ErrorKind::Json(value.to_string()));
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let kind: &ErrorKind = &self.0;
+
+        let msg: String = match kind {
+            ErrorKind::Json(err_msg) => format!("[ERR.JSON] {}", err_msg),
+            ErrorKind::Io(err_msg) => format!("[ERR.IO] {}", err_msg),
         };
+
+        return write!(f, "{}", msg);
     }
 }
