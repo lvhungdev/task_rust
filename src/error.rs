@@ -1,12 +1,13 @@
 use std::{convert, fmt, io, result};
 
 #[derive(Debug)]
-pub struct Error(ErrorKind);
+pub struct Error(pub ErrorKind);
 
 #[derive(Debug)]
 pub enum ErrorKind {
     Json(String),
     Io(String),
+    Input(String),
 }
 
 pub type Result<T> = result::Result<T, Error>;
@@ -30,6 +31,7 @@ impl fmt::Display for Error {
         let msg: String = match kind {
             ErrorKind::Json(err_msg) => format!("[ERR.JSON] {}", err_msg),
             ErrorKind::Io(err_msg) => format!("[ERR.IO] {}", err_msg),
+            ErrorKind::Input(err_msg) => format!("[ERR.INPUT] {}", err_msg),
         };
 
         return write!(f, "{}", msg);
