@@ -16,7 +16,9 @@ impl FileUtils {
     where
         T: JsonSerializer,
     {
-        // TODO handle create file if not exist
+        if fs::metadata(path).is_err() {
+            fs::File::create(path)?;
+        }
 
         let json: String = fs::read_to_string(path)?;
         let data: T = T::from_json(&json)?;
