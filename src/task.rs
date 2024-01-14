@@ -17,11 +17,11 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &str) -> Self {
         return Self {
             id: Uuid::new_v4().to_string(),
             created_date: Utc::now(),
-            name,
+            name: name.to_string(),
             is_done: false,
         };
     }
