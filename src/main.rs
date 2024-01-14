@@ -50,7 +50,18 @@ fn handle(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
                 manager.add_task(&name)?;
                 manager.save()?;
             }
-            "complete" => (),
+            "complete" => match args.get(1) {
+                Some(index) => {
+                    match index.to_string().parse::<usize>() {
+                        Ok(index) => {
+                            manager.complete_task(index)?;
+                            manager.save()?;
+                        }
+                        Err(_) => println!("[ERR.INPUT] id is invalid"),
+                    };
+                }
+                None => println!("[ERR.INPUT] id not found"),
+            },
             _ => println!("[ERR.INPUT] unknown command"),
         },
         None => manager.list_task(),

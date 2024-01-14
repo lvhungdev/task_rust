@@ -36,6 +36,16 @@ impl TaskManager {
         return Ok(());
     }
 
+    pub fn complete_task(&mut self, index: usize) -> Result<()> {
+        return match self.tasks.get_mut(index) {
+            Some(task) => {
+                task.is_done = true;
+                return Ok(());
+            }
+            None => Err(Error(ErrorKind::Input("id not found".to_string()))),
+        };
+    }
+
     pub fn save(&self) -> Result<()> {
         FileUtils::save(&self.db_path, &self.tasks)?;
 

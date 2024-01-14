@@ -37,20 +37,6 @@ impl fmt::Display for Task {
     }
 }
 
-impl JsonSerializer for Task {
-    fn to_json(&self) -> Result<String> {
-        let json: String = serde_json::to_string(self)?;
-
-        return Ok(json);
-    }
-
-    fn from_json(json: &str) -> Result<Self> {
-        let data: Self = serde_json::from_str(json)?;
-
-        return Ok(data);
-    }
-}
-
 impl JsonSerializer for Vec<Task> {
     fn to_json(&self) -> Result<String> {
         let json: String = serde_json::to_string(self)?;
