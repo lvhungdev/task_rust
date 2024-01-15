@@ -26,21 +26,21 @@ impl TaskManager {
         }
     }
 
-    pub fn add_task(&mut self, name: &str) -> Result<()> {
+    pub fn add_task(&mut self, name: &str) -> Result<usize> {
         if name.is_empty() {
             return Err(Error(ErrorKind::Input("name cannot be blank".to_string())));
         }
 
         self.tasks.push(Task::new(name));
 
-        return Ok(());
+        return Ok(self.tasks.len() - 1);
     }
 
-    pub fn complete_task(&mut self, index: usize) -> Result<()> {
+    pub fn complete_task(&mut self, index: usize) -> Result<usize> {
         return match self.tasks.get_mut(index) {
             Some(task) => {
                 task.is_done = true;
-                return Ok(());
+                return Ok(index);
             }
             None => Err(Error(ErrorKind::Input("id not found".to_string()))),
         };

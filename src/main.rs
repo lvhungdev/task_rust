@@ -1,6 +1,6 @@
 use std::env;
 
-use error::Result;
+use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
 
 mod error;
@@ -30,42 +30,59 @@ fn main() {
 }
 
 fn handle(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
-    match args.get(0) {
+    return match args.get(0) {
         Some(arg) => match arg.as_str() {
-            "add" => {
-                let args: Vec<String> = args
-                    .iter()
-                    .skip(1)
-                    .filter_map(|m| {
-                        return if m.is_empty() {
-                            None
-                        } else {
-                            Some(m.to_string())
-                        };
-                    })
-                    .collect();
-
-                let name: String = args.join(" ");
-
-                manager.add_task(&name)?;
-                manager.save()?;
-            }
-            "complete" => match args.get(1) {
-                Some(index) => {
-                    match index.to_string().parse::<usize>() {
-                        Ok(index) => {
-                            manager.complete_task(index)?;
-                            manager.save()?;
-                        }
-                        Err(_) => println!("[ERR.INPUT] id is invalid"),
-                    };
-                }
-                None => println!("[ERR.INPUT] id not found"),
-            },
-            _ => println!("[ERR.INPUT] unknown command"),
+            "add" => handle_add(manager, args),
+            "complete" => handle_complete(manager, args),
+            _ => Err(Error(ErrorKind::Input("unknown command".to_string()))),
         },
-        None => manager.list_task(),
+
+        None => handle_list(manager),
     };
+}
+
+fn handle_add(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
+    let args: Vec<String> = args
+        .iter()
+        .skip(1)
+        .filter_map(|m| {
+            return if m.is_empty() {
+                None
+            } else {
+                Some(m.to_string())
+            };
+        })
+        .collect();
+
+    let name: String = args.join(" ");
+
+    let index: usize = manager.add_task(&name)?;
+    manager.save()?;
+
+    println!("Created task {}", index);
 
     return Ok(());
+}
+
+fn handle_complete(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
+    return match args.get(1) {
+        Some(index) => {
+            return match index.to_string().parse::<usize>() {
+                Ok(index) => {
+                    let index: usize = manager.complete_task(index)?;
+                    manager.save()?;
+
+                    println!("Completed task {}", index);
+
+                    return Ok(());
+                }
+                Err(_) => Err(Error(ErrorKind::Input("id is invalid".to_string()))),
+            };
+        }
+        None => Err(Error(ErrorKind::Input("id not found".to_string()))),
+    };
+}
+
+fn handle_list(manager: &mut TaskManager) -> Result<()> {
+    return Ok(manager.list_task());
 }
