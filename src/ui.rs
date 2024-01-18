@@ -4,19 +4,14 @@ pub struct UI;
 
 impl UI {
     pub fn display_tasks(tasks: &[Task]) {
-        // let tasks_len: usize = tasks.len().to_string().len();
-        let tasks_len: usize = (tasks.len() * 1000).to_string().len();
-        let space: String = if tasks_len <= 2 {
-            "".to_string()
-        } else {
-            (0..tasks_len - 2).map(|_| " ").collect()
-        };
+        let tasks_len: usize = tasks.len().to_string().len();
+        let tasks_len = if tasks_len < 2 { 2 } else { tasks_len };
+        let space: String = (0..tasks_len - 2).map(|_| " ").collect();
 
         println!("Id {} Description", space);
         println!("-- {} -----------", space);
 
         for (index, task) in tasks.iter().enumerate() {
-            let index = index * 1000;
             let id_len: usize = index.to_string().len();
             let space_to_fill: usize = tasks_len - id_len;
 
