@@ -20,10 +20,8 @@ impl TaskManager {
         return Ok(());
     }
 
-    pub fn list_task(&self) {
-        for task in &self.tasks {
-            println!("{}", task);
-        }
+    pub fn get_tasks(&self) -> &Vec<Task> {
+        return &self.tasks;
     }
 
     pub fn add_task(&mut self, name: &str) -> Result<usize> {

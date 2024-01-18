@@ -2,11 +2,13 @@ use std::env;
 
 use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
+use ui::UI;
 
 mod error;
 mod file;
 mod manager;
 mod task;
+mod ui;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -29,7 +31,7 @@ fn main() {
     }
 }
 
-fn handle(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
+fn handle(manager: &mut TaskManager, args: &[String]) -> Result<()> {
     return match args.get(0) {
         Some(arg) => match arg.as_str() {
             "add" => handle_add(manager, args),
@@ -41,7 +43,7 @@ fn handle(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
     };
 }
 
-fn handle_add(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
+fn handle_add(manager: &mut TaskManager, args: &[String]) -> Result<()> {
     let args: Vec<String> = args
         .iter()
         .skip(1)
@@ -59,20 +61,24 @@ fn handle_add(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
     let index: usize = manager.add_task(&name)?;
     manager.save()?;
 
-    println!("Created task {}", index);
+    println!("Created task {}", index + 1);
 
     return Ok(());
 }
 
-fn handle_complete(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> {
+fn handle_complete(manager: &mut TaskManager, args: &[String]) -> Result<()> {
     return match args.get(1) {
         Some(index) => {
             return match index.to_string().parse::<usize>() {
                 Ok(index) => {
-                    let index: usize = manager.complete_task(index)?;
+                    if index == 0 {
+                        return Err(Error(ErrorKind::Input("id not found".to_string())));
+                    }
+
+                    let index: usize = manager.complete_task(index - 1)?;
                     manager.save()?;
 
-                    println!("Completed task {}", index);
+                    println!("Completed task {}", index + 1);
 
                     return Ok(());
                 }
@@ -84,5 +90,6 @@ fn handle_complete(manager: &mut TaskManager, args: &Vec<String>) -> Result<()> 
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
-    return Ok(manager.list_task());
+    UI::display_tasks(manager.get_tasks());
+    return Ok(());
 }
