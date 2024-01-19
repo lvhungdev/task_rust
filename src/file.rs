@@ -1,5 +1,7 @@
 use std::fs;
 
+use directories::BaseDirs;
+
 use crate::error::Result;
 
 pub struct FileUtils;
@@ -34,5 +36,15 @@ impl FileUtils {
         fs::write(path, json)?;
 
         return Ok(());
+    }
+
+    pub fn get_standard_local_data_path() -> Option<String> {
+        return match BaseDirs::new() {
+            Some(base_dir) => match base_dir.data_local_dir().to_str() {
+                Some(path) => Some(path.to_string()),
+                None => None,
+            },
+            None => None,
+        };
     }
 }

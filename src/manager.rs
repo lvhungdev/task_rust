@@ -7,9 +7,15 @@ pub struct TaskManager {
 }
 
 impl TaskManager {
-    pub fn new(db_path: &str) -> Self {
+    pub fn new() -> Self {
+        let standard_path: Option<String> = FileUtils::get_standard_local_data_path();
+        let db_path: String = match standard_path {
+            Some(path) => format!("{}/db.json", path),
+            None => "./db.json".to_string(),
+        };
+
         return Self {
-            db_path: db_path.to_string(),
+            db_path,
             tasks: Vec::new(),
         };
     }

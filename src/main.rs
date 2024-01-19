@@ -13,13 +13,14 @@ mod ui;
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
-    let mut manager: TaskManager = TaskManager::new("./db.json");
+    let mut manager: TaskManager = TaskManager::new();
 
     match manager.load() {
         Ok(_) => (),
         Err(err) => {
             println!("[ERR.IO] failed to load data from file");
             println!("{}", err);
+            return;
         }
     };
 
