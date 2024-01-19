@@ -4,6 +4,11 @@ pub struct UI;
 
 impl UI {
     pub fn display_tasks(tasks: &[Task]) {
+        if tasks.len() == 0 {
+            println!("empty");
+            return;
+        }
+
         let tasks_len: usize = tasks.len().to_string().len();
         let tasks_len = if tasks_len < 2 { 2 } else { tasks_len };
         let space: String = (0..tasks_len - 2).map(|_| " ").collect();

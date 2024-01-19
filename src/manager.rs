@@ -36,8 +36,9 @@ impl TaskManager {
 
     pub fn complete_task(&mut self, index: usize) -> Result<usize> {
         return match self.tasks.get_mut(index) {
-            Some(task) => {
-                task.is_done = true;
+            Some(_) => {
+                // TODO Find a better way to handle completing tasks
+                self.tasks.remove(index);
                 return Ok(index);
             }
             None => Err(Error(ErrorKind::Input("id not found".to_string()))),
