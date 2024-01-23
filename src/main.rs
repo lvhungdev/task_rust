@@ -2,7 +2,6 @@ use std::env;
 
 use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
-use ui::UI;
 
 mod error;
 mod file;
@@ -91,6 +90,17 @@ fn handle_complete(manager: &mut TaskManager, args: &[String]) -> Result<()> {
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
-    UI::display_tasks(manager.get_tasks());
+    ui::table::Table::new(2)
+        .with_header(vec!["Id".to_string(), "Description".to_string()])
+        .with_content(
+            manager
+                .get_tasks()
+                .iter()
+                .enumerate()
+                .map(|(i, m)| vec![(i + 1).to_string(), m.name.to_string()])
+                .collect(),
+        )
+        .display();
+
     return Ok(());
 }
