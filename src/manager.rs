@@ -1,27 +1,23 @@
+use chrono::Local;
+
 use crate::error::{Error, ErrorKind, Result};
-use crate::{file::FileUtils, task::Task};
+use crate::{repo::Repo, task::Task};
 
 pub struct TaskManager {
-    db_path: String,
+    repo: Repo,
     tasks: Vec<Task>,
 }
 
 impl TaskManager {
-    pub fn new() -> Self {
-        let standard_path: Option<String> = FileUtils::get_standard_local_data_path();
-        let db_path: String = match standard_path {
-            Some(path) => format!("{}/db.json", path),
-            None => "./db.json".to_string(),
-        };
-
+    pub fn new(repo: Repo) -> Self {
         return Self {
-            db_path,
+            repo,
             tasks: Vec::new(),
         };
     }
 
     pub fn load(&mut self) -> Result<()> {
-        self.tasks = FileUtils::load(&self.db_path)?;
+        self.tasks = self.repo.get(false)?;
 
         return Ok(());
     }
@@ -36,6 +32,7 @@ impl TaskManager {
         }
 
         self.tasks.push(Task::new(name));
+        self.repo.add(self.tasks.last().unwrap())?;
 
         return Ok(self.tasks.len() - 1);
     }
@@ -43,17 +40,16 @@ impl TaskManager {
     pub fn complete_task(&mut self, index: usize) -> Result<usize> {
         return match self.tasks.get_mut(index) {
             Some(_) => {
-                // TODO Find a better way to handle completing tasks
-                self.tasks.remove(index);
+                let mut task = self.tasks.remove(index);
+
+                task.is_completed = true;
+                task.completed_date = Some(Local::now());
+
+                self.repo.update(&task)?;
+
                 return Ok(index);
             }
             None => Err(Error(ErrorKind::Input("id not found".to_string()))),
         };
-    }
-
-    pub fn save(&self) -> Result<()> {
-        FileUtils::save(&self.db_path, &self.tasks)?;
-
-        return Ok(());
     }
 }

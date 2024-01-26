@@ -2,26 +2,36 @@ use std::env;
 
 use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
+use repo::Repo;
 
 mod error;
-mod file;
 mod manager;
+mod repo;
 mod task;
 mod ui;
 
 fn main() {
-    let args: Vec<String> = env::args().skip(1).collect();
-
-    let mut manager: TaskManager = TaskManager::new();
-
-    match manager.load() {
+    let repo: Repo = Repo::new();
+    match repo.init() {
         Ok(_) => (),
         Err(err) => {
-            println!("[ERR.IO] failed to load data from file");
+            println!("[ERR.IO] failed to connect to database");
             println!("{}", err);
             return;
         }
     };
+
+    let mut manager: TaskManager = TaskManager::new(repo);
+    match manager.load() {
+        Ok(_) => (),
+        Err(err) => {
+            println!("[ERR.IO] failed to load data from database");
+            println!("{}", err);
+            return;
+        }
+    };
+
+    let args: Vec<String> = env::args().skip(1).collect();
 
     match handle(&mut manager, &args) {
         Ok(_) => (),
@@ -59,7 +69,6 @@ fn handle_add(manager: &mut TaskManager, args: &[String]) -> Result<()> {
     let name: String = args.join(" ");
 
     let index: usize = manager.add_task(&name)?;
-    manager.save()?;
 
     println!("Created task {}", index + 1);
 
@@ -76,7 +85,6 @@ fn handle_complete(manager: &mut TaskManager, args: &[String]) -> Result<()> {
                     }
 
                     let index: usize = manager.complete_task(index - 1)?;
-                    manager.save()?;
 
                     println!("Completed task {}", index + 1);
 
@@ -97,7 +105,7 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
                 .get_tasks()
                 .iter()
                 .enumerate()
-                .map(|(i, m)| vec![(i + 1).to_string(), m.name.to_string()])
+                .map(|(i, m)| vec![(i + 1).to_string(), m.description.to_string()])
                 .collect(),
         )
         .display();
