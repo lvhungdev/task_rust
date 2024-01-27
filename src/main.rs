@@ -98,14 +98,27 @@ fn handle_complete(manager: &mut TaskManager, args: &[String]) -> Result<()> {
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
-    ui::table::Table::new(2)
-        .with_header(vec!["Id".to_string(), "Description".to_string()])
+    ui::table::Table::new(3)
+        .with_header(vec![
+            "Id".to_string(),
+            "Description".to_string(),
+            "Due".to_string(),
+        ])
         .with_content(
             manager
                 .get_tasks()
                 .iter()
                 .enumerate()
-                .map(|(i, m)| vec![(i + 1).to_string(), m.description.to_string()])
+                .map(|(i, m)| {
+                    vec![
+                        (i + 1).to_string(),
+                        m.description.to_string(),
+                        match m.due_date {
+                            Some(due) => due.to_string(),
+                            None => "".to_string(),
+                        },
+                    ]
+                })
                 .collect(),
         )
         .display();

@@ -31,7 +31,8 @@ impl Repo {
                 description    TEXT NOT NULL,
                 created_date   DATETIME NOT NULL,
                 completed_date DATETIME,
-                is_completed   INTEGER NOT NULL
+                is_completed   INTEGER NOT NULL,
+                due_date       DATETIME
             )
             ",
             (),
@@ -45,7 +46,13 @@ impl Repo {
 
         let mut statement = conn.prepare(
             "
-            SELECT id, description, created_date, completed_date, is_completed
+            SELECT
+            id,
+            description,
+            created_date,
+            completed_date,
+            is_completed,
+            due_date
             FROM tasks
             WHERE is_completed = ?1
             ",
@@ -59,6 +66,7 @@ impl Repo {
                     created_date: row.get(2)?,
                     completed_date: row.get(3)?,
                     is_completed: row.get(4)?,
+                    due_date: row.get(5)?,
                 })
             })?
             .map(|m| m.unwrap())
@@ -77,14 +85,16 @@ impl Repo {
                 description,
                 created_date,
                 completed_date,
-                is_completed
-            ) VALUES (?1, ?2, ?3, ?4)
+                is_completed,
+                due_date
+            ) VALUES (?1, ?2, ?3, ?4, ?5)
             ",
             (
                 &task.description,
                 task.created_date,
                 task.completed_date,
                 task.is_completed,
+                task.due_date,
             ),
         )?;
 
@@ -101,14 +111,16 @@ impl Repo {
             description = ?1,
             created_date = ?2,
             completed_date = ?3,
-            is_completed = ?4
-            WHERE id = ?5
+            is_completed = ?4,
+            due_date = ?5
+            WHERE id = ?6
             ",
             (
                 &task.description,
                 task.created_date,
                 task.completed_date,
                 task.is_completed,
+                task.due_date,
                 task.id,
             ),
         )?;

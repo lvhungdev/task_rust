@@ -6,6 +6,7 @@ pub struct Task {
     pub created_date: DateTime<Local>,
     pub completed_date: Option<DateTime<Local>>,
     pub is_completed: bool,
+    pub due_date: Option<DateTime<Local>>,
 }
 
 impl Task {
@@ -16,6 +17,7 @@ impl Task {
             created_date: Local::now(),
             completed_date: None,
             is_completed: false,
+            due_date: None,
         };
     }
 }
