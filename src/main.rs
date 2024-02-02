@@ -1,9 +1,11 @@
 use std::env;
 
+use cli::parser::{Command, Parser};
 use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
 use repo::Repo;
 
+mod cli;
 mod error;
 mod manager;
 mod repo;
@@ -12,62 +14,39 @@ mod ui;
 
 fn main() {
     let repo: Repo = Repo::new();
-    match repo.init() {
-        Ok(_) => (),
-        Err(err) => {
-            println!("[ERR.IO] failed to connect to database");
-            println!("{}", err);
-            return;
-        }
-    };
+    if let Err(err) = repo.init() {
+        println!("[ERR.IO] failed to connect to database");
+        println!("{}", err);
+        return;
+    }
 
     let mut manager: TaskManager = TaskManager::new(repo);
-    match manager.load() {
-        Ok(_) => (),
-        Err(err) => {
-            println!("[ERR.IO] failed to load data from database");
-            println!("{}", err);
-            return;
-        }
+    if let Err(err) = manager.load() {
+        println!("[ERR.IO] failed to load data from database");
+        println!("{}", err);
+        return;
     };
 
-    let args: Vec<String> = env::args().skip(1).collect();
-
-    match handle(&mut manager, &args) {
-        Ok(_) => (),
-        Err(err) => {
-            println!("{}", err);
-        }
+    if let Err(err) = handle(&mut manager) {
+        println!("{}", err);
     }
 }
 
-fn handle(manager: &mut TaskManager, args: &[String]) -> Result<()> {
-    return match args.get(0) {
-        Some(arg) => match arg.as_str() {
-            "add" => handle_add(manager, args),
-            "complete" => handle_complete(manager, args),
-            _ => Err(Error(ErrorKind::Input("unknown command".to_string()))),
-        },
+fn handle(manager: &mut TaskManager) -> Result<()> {
+    let parser: Parser = Parser::new(env::args().collect());
 
-        None => handle_list(manager),
+    return match parser.parse() {
+        Ok(command) => match command {
+            Command::List => handle_list(manager),
+            Command::Add(name) => handle_add(manager, &name),
+            Command::Complete(index) => handle_complete(manager, index),
+            Command::Unknown => Err(Error(ErrorKind::Input("unknown command".to_string()))),
+        },
+        Err(err) => Err(err),
     };
 }
 
-fn handle_add(manager: &mut TaskManager, args: &[String]) -> Result<()> {
-    let args: Vec<String> = args
-        .iter()
-        .skip(1)
-        .filter_map(|m| {
-            return if m.is_empty() {
-                None
-            } else {
-                Some(m.to_string())
-            };
-        })
-        .collect();
-
-    let name: String = args.join(" ");
-
+fn handle_add(manager: &mut TaskManager, name: &str) -> Result<()> {
     let index: usize = manager.add_task(&name)?;
 
     println!("Created task {}", index + 1);
@@ -75,26 +54,12 @@ fn handle_add(manager: &mut TaskManager, args: &[String]) -> Result<()> {
     return Ok(());
 }
 
-fn handle_complete(manager: &mut TaskManager, args: &[String]) -> Result<()> {
-    return match args.get(1) {
-        Some(index) => {
-            return match index.to_string().parse::<usize>() {
-                Ok(index) => {
-                    if index == 0 {
-                        return Err(Error(ErrorKind::Input("id not found".to_string())));
-                    }
+fn handle_complete(manager: &mut TaskManager, index: usize) -> Result<()> {
+    let index: usize = manager.complete_task(index - 1)?;
 
-                    let index: usize = manager.complete_task(index - 1)?;
+    println!("Completed task {}", index + 1);
 
-                    println!("Completed task {}", index + 1);
-
-                    return Ok(());
-                }
-                Err(_) => Err(Error(ErrorKind::Input("id is invalid".to_string()))),
-            };
-        }
-        None => Err(Error(ErrorKind::Input("id not found".to_string()))),
-    };
+    return Ok(());
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
