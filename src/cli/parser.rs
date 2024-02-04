@@ -1,9 +1,11 @@
+use chrono::{DateTime, Local};
+
 use crate::error::Result;
 use crate::error::{Error, ErrorKind};
 
 pub enum Command {
     List,
-    Add(String),
+    Add(String, Option<DateTime<Local>>),
     Complete(usize),
     Unknown,
 }
@@ -21,7 +23,7 @@ impl Parser {
         return match self.args.get(1) {
             Some(arg) => match arg.as_str() {
                 "add" => self.parse_add(),
-                "complete" => self.parse_done(),
+                "complete" => self.parse_complete(),
                 _ => Ok(Command::Unknown),
             },
 
@@ -29,26 +31,48 @@ impl Parser {
         };
     }
 
+    // TODO Refactor this method to make it more concise and readable
+    // This method for now handles only due_date option
+    // Ideally, we should have a method that processes for each option
+    // E.g due_date, project, etc
     fn parse_add(&self) -> Result<Command> {
-        let args: Vec<String> = self
-            .args
-            .iter()
-            .skip(2)
-            .filter_map(|m| {
-                return if m.is_empty() {
-                    None
-                } else {
-                    Some(m.to_string())
+        let mut name_vec: Vec<String> = Vec::with_capacity(self.args.len());
+        let mut due_date: Option<DateTime<Local>> = None;
+
+        for arg in self.args.iter().skip(2) {
+            if arg.contains(":") {
+                let mut iter = arg.split(":");
+                let key: &str = iter.next().unwrap();
+                let value: String = iter.collect::<Vec<&str>>().join(":");
+
+                match key {
+                    "due" => {
+                        match value.parse::<DateTime<Local>>() {
+                            Ok(date) => due_date = Some(date),
+                            Err(_) => {
+                                return Err(Error(ErrorKind::Input(format!(
+                                    "invalid date format: {}",
+                                    value
+                                ))));
+                            }
+                        };
+                    }
+                    _ => {
+                        return Err(Error(ErrorKind::Input(format!(
+                            "unknown argument: {}",
+                            key
+                        ))));
+                    }
                 };
-            })
-            .collect();
+            } else if !arg.is_empty() {
+                name_vec.push(arg.to_string());
+            }
+        }
 
-        let name: String = args.join(" ");
-
-        return Ok(Command::Add(name));
+        return Ok(Command::Add(name_vec.join(" "), due_date));
     }
 
-    fn parse_done(&self) -> Result<Command> {
+    fn parse_complete(&self) -> Result<Command> {
         return match self.args.get(2) {
             Some(index) => match index.to_string().parse::<usize>() {
                 Ok(index) => {

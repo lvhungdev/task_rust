@@ -10,14 +10,14 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: &str, due_date: Option<DateTime<Local>>) -> Self {
         return Self {
             id: 0,
             description: name.to_string(),
             created_date: Local::now(),
             completed_date: None,
             is_completed: false,
-            due_date: None,
+            due_date,
         };
     }
 }

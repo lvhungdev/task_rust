@@ -1,5 +1,6 @@
 use std::env;
 
+use chrono::{DateTime, Local};
 use cli::parser::{Command, Parser};
 use error::{Error, ErrorKind, Result};
 use manager::TaskManager;
@@ -38,7 +39,7 @@ fn handle(manager: &mut TaskManager) -> Result<()> {
     return match parser.parse() {
         Ok(command) => match command {
             Command::List => handle_list(manager),
-            Command::Add(name) => handle_add(manager, &name),
+            Command::Add(name, due_date) => handle_add(manager, &name, due_date),
             Command::Complete(index) => handle_complete(manager, index),
             Command::Unknown => Err(Error(ErrorKind::Input("unknown command".to_string()))),
         },
@@ -46,8 +47,12 @@ fn handle(manager: &mut TaskManager) -> Result<()> {
     };
 }
 
-fn handle_add(manager: &mut TaskManager, name: &str) -> Result<()> {
-    let index: usize = manager.add_task(&name)?;
+fn handle_add(
+    manager: &mut TaskManager,
+    name: &str,
+    due_date: Option<DateTime<Local>>,
+) -> Result<()> {
+    let index: usize = manager.add_task(&name, due_date)?;
 
     println!("Created task {}", index + 1);
 
