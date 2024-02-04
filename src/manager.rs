@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::{DateTime, Local};
 
 use crate::error::{Error, ErrorKind, Result};
 use crate::{repo::Repo, task::Task};
@@ -26,12 +26,12 @@ impl TaskManager {
         return &self.tasks;
     }
 
-    pub fn add_task(&mut self, name: &str) -> Result<usize> {
+    pub fn add_task(&mut self, name: &str, due_date: Option<DateTime<Local>>) -> Result<usize> {
         if name.is_empty() {
             return Err(Error(ErrorKind::Input("name cannot be blank".to_string())));
         }
 
-        self.tasks.push(Task::new(name));
+        self.tasks.push(Task::new(name, due_date));
         self.repo.add(self.tasks.last().unwrap())?;
 
         return Ok(self.tasks.len() - 1);

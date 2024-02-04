@@ -72,8 +72,8 @@ impl Table {
                     None => 0,
                 };
 
-                return if self.header.len() > max_content_len {
-                    self.header.len()
+                return if self.header[i].len() > max_content_len {
+                    self.header[i].len()
                 } else {
                     max_content_len
                 };
