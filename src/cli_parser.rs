@@ -10,13 +10,13 @@ pub enum Command {
     Unknown,
 }
 
-pub struct Parser {
+pub struct CliParser {
     args: Vec<String>,
 }
 
-impl Parser {
+impl CliParser {
     pub fn new(args: Vec<String>) -> Self {
-        return Parser { args };
+        return CliParser { args };
     }
 
     pub fn parse(&self) -> Result<Command> {

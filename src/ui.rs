@@ -36,7 +36,7 @@ impl Table {
             .header
             .iter()
             .enumerate()
-            .map(|(i, m)| get_text_with_space(m, max_len[i]))
+            .map(|(i, m)| Self::get_text_with_space(m, max_len[i]))
             .collect();
         println!("{}", header_with_space.join("  "));
 
@@ -46,7 +46,7 @@ impl Table {
             .enumerate()
             .map(|(i, m)| {
                 let divider: String = (0..m.len()).map(|_| "-").collect();
-                return get_text_with_space(&divider, max_len[i]);
+                return Self::get_text_with_space(&divider, max_len[i]);
             })
             .collect();
         println!("{}", divider_with_space.join("  "));
@@ -55,7 +55,7 @@ impl Table {
             let row_with_space: Vec<String> = row
                 .iter()
                 .enumerate()
-                .map(|(i, m)| get_text_with_space(m, max_len[i]))
+                .map(|(i, m)| Self::get_text_with_space(m, max_len[i]))
                 .collect();
 
             println!("{}", row_with_space.join("  "));
@@ -80,15 +80,15 @@ impl Table {
             })
             .collect();
     }
-}
 
-fn get_text_with_space(text: &str, max_len: usize) -> String {
-    if text.len() >= max_len {
-        return text.to_string();
+    fn get_text_with_space(text: &str, max_len: usize) -> String {
+        if text.len() >= max_len {
+            return text.to_string();
+        }
+
+        let space_to_fill: usize = max_len - text.len();
+        let space: String = (0..space_to_fill).map(|_| " ").collect();
+
+        return format!("{}{}", text, space);
     }
-
-    let space_to_fill: usize = max_len - text.len();
-    let space: String = (0..space_to_fill).map(|_| " ").collect();
-
-    return format!("{}{}", text, space);
 }

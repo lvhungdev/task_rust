@@ -1,14 +1,13 @@
 use std::env;
 
 use chrono::{DateTime, Local};
-use cli::parser::{Command, Parser};
+use cli_parser::{CliParser, Command};
 use error::{Error, ErrorKind, Result};
-use manager::TaskManager;
 use repo::Repo;
+use task::TaskManager;
 
-mod cli;
+mod cli_parser;
 mod error;
-mod manager;
 mod repo;
 mod task;
 mod ui;
@@ -34,16 +33,13 @@ fn main() {
 }
 
 fn handle(manager: &mut TaskManager) -> Result<()> {
-    let parser: Parser = Parser::new(env::args().collect());
+    let parser: CliParser = CliParser::new(env::args().collect());
 
-    return match parser.parse() {
-        Ok(command) => match command {
-            Command::List => handle_list(manager),
-            Command::Add(name, due_date) => handle_add(manager, &name, due_date),
-            Command::Complete(index) => handle_complete(manager, index),
-            Command::Unknown => Err(Error(ErrorKind::Input("unknown command".to_string()))),
-        },
-        Err(err) => Err(err),
+    return match parser.parse()? {
+        Command::List => handle_list(manager),
+        Command::Add(name, due_date) => handle_add(manager, &name, due_date),
+        Command::Complete(index) => handle_complete(manager, index),
+        Command::Unknown => Err(Error(ErrorKind::Input("unknown command".to_string()))),
     };
 }
 
@@ -68,7 +64,7 @@ fn handle_complete(manager: &mut TaskManager, index: usize) -> Result<()> {
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
-    ui::table::Table::new(3)
+    ui::Table::new(3)
         .with_header(vec![
             "Id".to_string(),
             "Description".to_string(),
