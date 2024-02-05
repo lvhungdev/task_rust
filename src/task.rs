@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{Local, NaiveDateTime};
 
 use crate::error::{Error, ErrorKind, Result};
 use crate::repo::Repo;
@@ -6,18 +6,18 @@ use crate::repo::Repo;
 pub struct Task {
     pub id: usize,
     pub description: String,
-    pub created_date: DateTime<Local>,
-    pub completed_date: Option<DateTime<Local>>,
+    pub created_date: NaiveDateTime,
+    pub completed_date: Option<NaiveDateTime>,
     pub is_completed: bool,
-    pub due_date: Option<DateTime<Local>>,
+    pub due_date: Option<NaiveDateTime>,
 }
 
 impl Task {
-    pub fn new(name: &str, due_date: Option<DateTime<Local>>) -> Self {
+    pub fn new(name: &str, due_date: Option<NaiveDateTime>) -> Self {
         return Self {
             id: 0,
             description: name.to_string(),
-            created_date: Local::now(),
+            created_date: Local::now().naive_local(),
             completed_date: None,
             is_completed: false,
             due_date,
@@ -48,7 +48,7 @@ impl TaskManager {
         return &self.tasks;
     }
 
-    pub fn add_task(&mut self, name: &str, due_date: Option<DateTime<Local>>) -> Result<usize> {
+    pub fn add_task(&mut self, name: &str, due_date: Option<NaiveDateTime>) -> Result<usize> {
         if name.is_empty() {
             return Err(Error(ErrorKind::Input("name cannot be blank".to_string())));
         }
@@ -65,7 +65,7 @@ impl TaskManager {
                 let mut task = self.tasks.remove(index);
 
                 task.is_completed = true;
-                task.completed_date = Some(Local::now());
+                task.completed_date = Some(Local::now().naive_local());
 
                 self.repo.update(&task)?;
 

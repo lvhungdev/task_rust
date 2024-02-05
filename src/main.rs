@@ -1,6 +1,6 @@
 use std::env;
 
-use chrono::{DateTime, Local};
+use chrono::NaiveDateTime;
 use cli_parser::{CliParser, Command};
 use error::{Error, ErrorKind, Result};
 use repo::Repo;
@@ -46,7 +46,7 @@ fn handle(manager: &mut TaskManager) -> Result<()> {
 fn handle_add(
     manager: &mut TaskManager,
     name: &str,
-    due_date: Option<DateTime<Local>>,
+    due_date: Option<NaiveDateTime>,
 ) -> Result<()> {
     let index: usize = manager.add_task(&name, due_date)?;
 

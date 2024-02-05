@@ -1,11 +1,11 @@
-use chrono::{DateTime, Duration, Local, LocalResult};
+use chrono::{Datelike, Duration, Local, NaiveDateTime};
 
 use crate::error::Result;
 use crate::error::{Error, ErrorKind};
 
 pub enum Command {
     List,
-    Add(String, Option<DateTime<Local>>),
+    Add(String, Option<NaiveDateTime>),
     Complete(usize),
     Unknown,
 }
@@ -37,7 +37,7 @@ impl CliParser {
     // E.g due_date, project, etc
     fn parse_add(&self) -> Result<Command> {
         let mut name_vec: Vec<String> = Vec::with_capacity(self.args.len());
-        let mut due_date: Option<DateTime<Local>> = None;
+        let mut due_date: Option<NaiveDateTime> = None;
 
         for arg in self.args.iter().skip(2) {
             if arg.contains(":") {
@@ -84,7 +84,7 @@ impl CliParser {
 struct TimeParser;
 
 impl TimeParser {
-    fn parse(date_str: &str) -> Result<DateTime<Local>> {
+    fn parse(date_str: &str) -> Result<NaiveDateTime> {
         if let Some(date) = TimeParser::parse_absolute_date(date_str) {
             return Ok(date);
         }
@@ -103,14 +103,14 @@ impl TimeParser {
         ))));
     }
 
-    fn parse_absolute_date(date_str: &str) -> Option<DateTime<Local>> {
-        return match date_str.parse::<DateTime<Local>>() {
+    fn parse_absolute_date(date_str: &str) -> Option<NaiveDateTime> {
+        return match date_str.parse::<NaiveDateTime>() {
             Ok(date) => Some(date),
             Err(_) => None,
         };
     }
 
-    fn parse_relative_date(date_str: &str) -> Option<DateTime<Local>> {
+    fn parse_relative_date(date_str: &str) -> Option<NaiveDateTime> {
         if date_str.len() < 2 {
             return None;
         }
@@ -119,7 +119,7 @@ impl TimeParser {
         let amount: i64 = amount.parse().ok()?;
 
         return Some(
-            Local::now()
+            Local::now().naive_local()
                 + match unit {
                     "s" => Duration::seconds(amount),
                     "m" => Duration::minutes(amount),
@@ -133,7 +133,41 @@ impl TimeParser {
         );
     }
 
-    fn parse_end_of_date(date_str: &str) -> Option<DateTime<Local>> {
-        todo!()
+    fn parse_end_of_date(date_str: &str) -> Option<NaiveDateTime> {
+        return match date_str {
+            "eod" => Local::now().naive_local().date().and_hms_opt(23, 59, 59),
+            "eow" => {
+                let mut now = Local::now().naive_local().date();
+                let days_to_end_of_week = 7 - now.weekday().number_from_monday();
+                now += Duration::days(days_to_end_of_week as i64);
+                now.and_hms_opt(23, 59, 59)
+            }
+            "eom" => {
+                let mut now = Local::now().naive_local().date();
+                let days_in_month: usize = match now.month() {
+                    1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+                    4 | 6 | 9 | 11 => 30,
+                    2 => {
+                        if now.year() % 4 == 0 {
+                            29
+                        } else {
+                            28
+                        }
+                    }
+                    _ => 0,
+                };
+                let days_to_end_of_month = days_in_month - now.day() as usize;
+                now += Duration::days(days_to_end_of_month as i64);
+                now.and_hms_opt(23, 59, 59)
+            }
+            "eoy" => {
+                let mut now = Local::now().naive_local().date();
+                let days_to_end_of_year =
+                    if now.year() % 4 == 0 { 366 } else { 365 } - now.ordinal();
+                now += Duration::days(days_to_end_of_year as i64);
+                now.and_hms_opt(23, 59, 59)
+            }
+            _ => None,
+        };
     }
 }

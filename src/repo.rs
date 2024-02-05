@@ -11,10 +11,10 @@ impl Repo {
     pub fn new() -> Self {
         let conn_str: String = match directories::BaseDirs::new() {
             Some(base_dir) => match base_dir.data_local_dir().to_str() {
-                Some(path) => format!("{}/db.sqlite", path),
-                None => "./db.sqlite".to_string(),
+                Some(path) => format!("{}/task_db.sqlite", path),
+                None => "./task_db.sqlite".to_string(),
             },
-            None => "./db.sqlite".to_string(),
+            None => "./task_db.sqlite".to_string(),
         };
 
         return Self { conn_str };
