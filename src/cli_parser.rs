@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Duration, Local, LocalResult};
 
 use crate::error::Result;
 use crate::error::{Error, ErrorKind};
@@ -46,17 +46,7 @@ impl CliParser {
                 let value: String = iter.collect::<Vec<&str>>().join(":");
 
                 match key {
-                    "due" => {
-                        match value.parse::<DateTime<Local>>() {
-                            Ok(date) => due_date = Some(date),
-                            Err(_) => {
-                                return Err(Error(ErrorKind::Input(format!(
-                                    "invalid date format: {}",
-                                    value
-                                ))));
-                            }
-                        };
-                    }
+                    "due" => due_date = Some(TimeParser::parse(&value)?),
                     _ => {
                         return Err(Error(ErrorKind::Input(format!(
                             "unknown argument: {}",
@@ -88,5 +78,62 @@ impl CliParser {
 
             None => Err(Error(ErrorKind::Input("id not found".to_string()))),
         };
+    }
+}
+
+struct TimeParser;
+
+impl TimeParser {
+    fn parse(date_str: &str) -> Result<DateTime<Local>> {
+        if let Some(date) = TimeParser::parse_absolute_date(date_str) {
+            return Ok(date);
+        }
+
+        if let Some(date) = TimeParser::parse_relative_date(date_str) {
+            return Ok(date);
+        }
+
+        if let Some(date) = TimeParser::parse_end_of_date(date_str) {
+            return Ok(date);
+        }
+
+        return Err(Error(ErrorKind::Input(format!(
+            "invalid date format: {}",
+            date_str
+        ))));
+    }
+
+    fn parse_absolute_date(date_str: &str) -> Option<DateTime<Local>> {
+        return match date_str.parse::<DateTime<Local>>() {
+            Ok(date) => Some(date),
+            Err(_) => None,
+        };
+    }
+
+    fn parse_relative_date(date_str: &str) -> Option<DateTime<Local>> {
+        if date_str.len() < 2 {
+            return None;
+        }
+
+        let (amount, unit): (&str, &str) = date_str.split_at(date_str.len() - 1);
+        let amount: i64 = amount.parse().ok()?;
+
+        return Some(
+            Local::now()
+                + match unit {
+                    "s" => Duration::seconds(amount),
+                    "m" => Duration::minutes(amount),
+                    "h" => Duration::hours(amount),
+                    "d" => Duration::days(amount),
+                    "w" => Duration::weeks(amount),
+                    "M" => Duration::days(amount * 30),
+                    "y" => Duration::days(amount * 365),
+                    _ => return None,
+                },
+        );
+    }
+
+    fn parse_end_of_date(date_str: &str) -> Option<DateTime<Local>> {
+        todo!()
     }
 }
