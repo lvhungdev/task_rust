@@ -31,10 +31,6 @@ impl CliParser {
         };
     }
 
-    // TODO Refactor this method to make it more concise and readable
-    // This method for now handles only due_date option
-    // Ideally, we should have a method that processes for each option
-    // E.g due_date, project, etc
     fn parse_add(&self) -> Result<Command> {
         let mut name_vec: Vec<String> = Vec::with_capacity(self.args.len());
         let mut due_date: Option<NaiveDateTime> = None;

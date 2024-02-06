@@ -1,13 +1,15 @@
 use std::env;
 
 use chrono::NaiveDateTime;
-use cli_parser::{CliParser, Command};
+use converter::TimeConverter;
 use error::{Error, ErrorKind, Result};
+use parser::{CliParser, Command};
 use repo::Repo;
 use task::TaskManager;
 
-mod cli_parser;
+mod converter;
 mod error;
+mod parser;
 mod repo;
 mod task;
 mod ui;
@@ -80,7 +82,7 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
                         (i + 1).to_string(),
                         m.description.to_string(),
                         match m.due_date {
-                            Some(due) => due.to_string(),
+                            Some(due) => TimeConverter::get_relative_time_since_now(due),
                             None => "".to_string(),
                         },
                     ]
