@@ -66,6 +66,11 @@ fn handle_complete(manager: &mut TaskManager, index: usize) -> Result<()> {
 }
 
 fn handle_list(manager: &mut TaskManager) -> Result<()> {
+    if manager.get_tasks().is_empty() {
+        println!("empty");
+        return Ok(());
+    }
+
     ui::Table::new(3)
         .with_header(vec![
             "Id".to_string(),

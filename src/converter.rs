@@ -12,17 +12,25 @@ impl TimeConverter {
         if num_seconds < 0 {
             let num_seconds = num_seconds.abs();
             return match num_seconds {
-                0..=59 => format!("{} seconds ago", num_seconds),
-                60..=3599 => format!("{} minutes ago", num_seconds / 60),
-                3600..=86_399 => format!("{} hours ago", num_seconds / 3600),
-                _ => format!("{} days ago", num_seconds / 86_400),
+                0..=59 => format!("-{}s", num_seconds),
+                60..=3599 => format!("-{}m {}s", num_seconds / 60, num_seconds % 60),
+                3600..=86_399 => format!("-{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
+                _ => format!(
+                    "-{}d {}h",
+                    num_seconds / 86_400,
+                    (num_seconds % 86_400) / 3600
+                ),
             };
         } else {
             return match num_seconds {
-                0..=59 => format!("{} seconds left", num_seconds),
-                60..=3599 => format!("{} minutes left", num_seconds / 60),
-                3600..=86_399 => format!("{} hours left", num_seconds / 3600),
-                _ => format!("{} days left", num_seconds / 86_400),
+                0..=59 => format!("{}s", num_seconds),
+                60..=3599 => format!("{}m {}s", num_seconds / 60, num_seconds % 60),
+                3600..=86_399 => format!("{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
+                _ => format!(
+                    "{}d {}h",
+                    num_seconds / 86_400,
+                    (num_seconds % 86_400) / 3600
+                ),
             };
         }
     }

@@ -23,7 +23,7 @@ impl CliParser {
         return match self.args.get(1) {
             Some(arg) => match arg.as_str() {
                 "add" => self.parse_add(),
-                "complete" => self.parse_complete(),
+                "complete" | "cmp" => self.parse_complete(),
                 _ => Ok(Command::Unknown),
             },
 
