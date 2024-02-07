@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use chrono::{Local, NaiveDateTime};
 
 use crate::error::{Error, ErrorKind, Result};
@@ -10,10 +12,11 @@ pub struct Task {
     pub completed_date: Option<NaiveDateTime>,
     pub is_completed: bool,
     pub due_date: Option<NaiveDateTime>,
+    pub priority: Option<Priority>,
 }
 
 impl Task {
-    pub fn new(name: &str, due_date: Option<NaiveDateTime>) -> Self {
+    pub fn new(name: &str, due_date: Option<NaiveDateTime>, priority: Option<Priority>) -> Self {
         return Self {
             id: 0,
             description: name.to_string(),
@@ -21,6 +24,7 @@ impl Task {
             completed_date: None,
             is_completed: false,
             due_date,
+            priority,
         };
     }
 
@@ -41,7 +45,35 @@ impl Task {
             }
         }
 
+        if let Some(priority) = &self.priority {
+            urgency += match priority {
+                Priority::High => 6.0,
+                Priority::Medium => 3.8,
+                Priority::Low => 1.8,
+            };
+        }
+
         return urgency;
+    }
+}
+
+pub enum Priority {
+    High,
+    Medium,
+    Low,
+}
+
+impl Display for Priority {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        return write!(
+            f,
+            "{}",
+            match self {
+                Priority::High => "H",
+                Priority::Medium => "M",
+                Priority::Low => "L",
+            }
+        );
     }
 }
 
@@ -69,12 +101,17 @@ impl TaskManager {
         return &self.tasks;
     }
 
-    pub fn add_task(&mut self, name: &str, due_date: Option<NaiveDateTime>) -> Result<usize> {
+    pub fn add_task(
+        &mut self,
+        name: &str,
+        due_date: Option<NaiveDateTime>,
+        priority: Option<Priority>,
+    ) -> Result<usize> {
         if name.is_empty() {
             return Err(Error(ErrorKind::Input("name cannot be blank".to_string())));
         }
 
-        let task = Task::new(name, due_date);
+        let task = Task::new(name, due_date, priority);
         let created_date = task.created_date;
 
         self.tasks.push(task);

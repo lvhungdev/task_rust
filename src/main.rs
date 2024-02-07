@@ -39,7 +39,7 @@ fn handle(manager: &mut TaskManager) -> Result<()> {
 
     return match parser.parse()? {
         Command::List => handle_list(manager),
-        Command::Add(name, due_date) => handle_add(manager, &name, due_date),
+        Command::Add(name, due_date, priority) => handle_add(manager, &name, due_date, priority),
         Command::Complete(index) => handle_complete(manager, index),
         Command::Unknown => Err(Error(ErrorKind::Input("unknown command".to_string()))),
     };
@@ -49,8 +49,9 @@ fn handle_add(
     manager: &mut TaskManager,
     name: &str,
     due_date: Option<NaiveDateTime>,
+    priority: Option<task::Priority>,
 ) -> Result<()> {
-    let index: usize = manager.add_task(&name, due_date)?;
+    let index: usize = manager.add_task(&name, due_date, priority)?;
 
     println!("Created task {}", index + 1);
 
@@ -71,10 +72,11 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
         return Ok(());
     }
 
-    ui::Table::new(4)
+    ui::Table::new(5)
         .with_header(vec![
             "Id".to_string(),
-            "Description".to_string(),
+            "Desc".to_string(),
+            "Pri".to_string(),
             "Due".to_string(),
             "Urg".to_string(),
         ])
@@ -87,11 +89,15 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
                     vec![
                         (i + 1).to_string(),
                         m.description.to_string(),
+                        match &m.priority {
+                            Some(p) => p.to_string(),
+                            None => "".to_string(),
+                        },
                         match m.due_date {
                             Some(due) => TimeConverter::get_relative_time_since_now(due),
                             None => "".to_string(),
                         },
-                        format!("{:.2}", m.get_urgency()),
+                        format!("{:.1}", (m.get_urgency() * 10.0).round() / 10.0),
                     ]
                 })
                 .collect(),

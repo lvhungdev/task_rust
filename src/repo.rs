@@ -1,5 +1,7 @@
+use rusqlite::types::{FromSql, FromSqlResult, ToSql, ToSqlOutput, Value, ValueRef};
 use rusqlite::Connection;
 
+use crate::task::Priority;
 use crate::{error::Result, task::Task};
 
 pub struct Repo {
@@ -32,7 +34,8 @@ impl Repo {
                 created_date   DATETIME NOT NULL,
                 completed_date DATETIME,
                 is_completed   INTEGER NOT NULL,
-                due_date       DATETIME
+                due_date       DATETIME,
+                priority       INTEGER
             )
             ",
             (),
@@ -52,7 +55,8 @@ impl Repo {
             created_date,
             completed_date,
             is_completed,
-            due_date
+            due_date,
+            priority
             FROM tasks
             WHERE is_completed = ?1
             ",
@@ -67,6 +71,7 @@ impl Repo {
                     completed_date: row.get(3)?,
                     is_completed: row.get(4)?,
                     due_date: row.get(5)?,
+                    priority: row.get(6)?,
                 })
             })?
             .map(|m| m.unwrap())
@@ -86,8 +91,9 @@ impl Repo {
                 created_date,
                 completed_date,
                 is_completed,
-                due_date
-            ) VALUES (?1, ?2, ?3, ?4, ?5)
+                due_date,
+                priority
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
             ",
             (
                 &task.description,
@@ -95,6 +101,7 @@ impl Repo {
                 task.completed_date,
                 task.is_completed,
                 task.due_date,
+                &task.priority,
             ),
         )?;
 
@@ -112,8 +119,9 @@ impl Repo {
             created_date = ?2,
             completed_date = ?3,
             is_completed = ?4,
-            due_date = ?5
-            WHERE id = ?6
+            due_date = ?5,
+            priority = ?6
+            WHERE id = ?7
             ",
             (
                 &task.description,
@@ -121,10 +129,32 @@ impl Repo {
                 task.completed_date,
                 task.is_completed,
                 task.due_date,
+                &task.priority,
                 task.id,
             ),
         )?;
 
         return Ok(());
+    }
+}
+
+impl FromSql for Priority {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        return match value {
+            ValueRef::Integer(0) => Ok(Priority::High),
+            ValueRef::Integer(1) => Ok(Priority::Medium),
+            ValueRef::Integer(2) => Ok(Priority::Low),
+            _ => Err(rusqlite::types::FromSqlError::InvalidType),
+        };
+    }
+}
+
+impl ToSql for Priority {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        return match self {
+            Priority::High => Ok(ToSqlOutput::Owned(Value::Integer(0))),
+            Priority::Medium => Ok(ToSqlOutput::Owned(Value::Integer(1))),
+            Priority::Low => Ok(ToSqlOutput::Owned(Value::Integer(2))),
+        };
     }
 }

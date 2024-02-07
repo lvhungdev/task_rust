@@ -2,10 +2,11 @@ use chrono::{Datelike, Duration, Local, NaiveDateTime};
 
 use crate::error::Result;
 use crate::error::{Error, ErrorKind};
+use crate::task::Priority;
 
 pub enum Command {
     List,
-    Add(String, Option<NaiveDateTime>),
+    Add(String, Option<NaiveDateTime>, Option<Priority>),
     Complete(usize),
     Unknown,
 }
@@ -34,6 +35,7 @@ impl CliParser {
     fn parse_add(&self) -> Result<Command> {
         let mut name_vec: Vec<String> = Vec::with_capacity(self.args.len());
         let mut due_date: Option<NaiveDateTime> = None;
+        let mut priority: Option<Priority> = None;
 
         for arg in self.args.iter().skip(2) {
             if arg.contains(":") {
@@ -43,6 +45,7 @@ impl CliParser {
 
                 match key {
                     "due" => due_date = Some(TimeParser::parse(&value)?),
+                    "pri" => priority = Some(PriorityParser::parse(&value)?),
                     _ => {
                         return Err(Error(ErrorKind::Input(format!(
                             "unknown argument: {}",
@@ -55,7 +58,7 @@ impl CliParser {
             }
         }
 
-        return Ok(Command::Add(name_vec.join(" "), due_date));
+        return Ok(Command::Add(name_vec.join(" "), due_date, priority));
     }
 
     fn parse_complete(&self) -> Result<Command> {
@@ -164,6 +167,22 @@ impl TimeParser {
                 now.and_hms_opt(23, 59, 59)
             }
             _ => None,
+        };
+    }
+}
+
+struct PriorityParser;
+
+impl PriorityParser {
+    fn parse(priority_str: &str) -> Result<Priority> {
+        return match priority_str {
+            "h" | "high" => Ok(Priority::High),
+            "m" | "medium" => Ok(Priority::Medium),
+            "l" | "low" => Ok(Priority::Low),
+            _ => Err(Error(ErrorKind::Input(format!(
+                "invalid priority: {}",
+                priority_str
+            )))),
         };
     }
 }
