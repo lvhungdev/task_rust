@@ -31,12 +31,19 @@ impl Table {
 
     pub fn display(&self) {
         let max_len: Vec<usize> = self.find_max_len_each_col();
+        let max_len_content: Vec<usize> = self.find_max_len_content_each_col();
 
         let header_with_space: Vec<String> = self
             .header
             .iter()
             .enumerate()
-            .map(|(i, m)| Self::get_text_with_space(m, max_len[i]))
+            .filter_map(|(i, m)| {
+                return if max_len_content[i] == 0 {
+                    None
+                } else {
+                    Some(Self::get_text_with_space(m, max_len[i]))
+                };
+            })
             .collect();
         println!("{}", header_with_space.join("  "));
 
@@ -44,9 +51,13 @@ impl Table {
             .header
             .iter()
             .enumerate()
-            .map(|(i, m)| {
-                let divider: String = (0..m.len()).map(|_| "-").collect();
-                return Self::get_text_with_space(&divider, max_len[i]);
+            .filter_map(|(i, m)| {
+                return if max_len_content[i] == 0 {
+                    None
+                } else {
+                    let divider: String = (0..m.len()).map(|_| "-").collect();
+                    return Some(Self::get_text_with_space(&divider, max_len[i]));
+                };
             })
             .collect();
         println!("{}", divider_with_space.join("  "));
@@ -55,7 +66,13 @@ impl Table {
             let row_with_space: Vec<String> = row
                 .iter()
                 .enumerate()
-                .map(|(i, m)| Self::get_text_with_space(m, max_len[i]))
+                .filter_map(|(i, m)| {
+                    return if max_len_content[i] == 0 {
+                        None
+                    } else {
+                        Some(Self::get_text_with_space(m, max_len[i]))
+                    };
+                })
                 .collect();
 
             println!("{}", row_with_space.join("  "));
@@ -76,6 +93,19 @@ impl Table {
                     self.header[i].len()
                 } else {
                     max_content_len
+                };
+            })
+            .collect();
+    }
+
+    fn find_max_len_content_each_col(&self) -> Vec<usize> {
+        return (0..self.col_size)
+            .map(|i| {
+                let cols: Vec<String> = self.content.iter().map(|c| c[i].to_string()).collect();
+
+                return match cols.iter().max_by(|x, y| x.len().cmp(&y.len())) {
+                    Some(c) => c.len(),
+                    None => 0,
                 };
             })
             .collect();
