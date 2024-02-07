@@ -14,22 +14,22 @@ impl TimeConverter {
             return match num_seconds {
                 0..=59 => format!("-{}s", num_seconds),
                 60..=3599 => format!("-{}m {}s", num_seconds / 60, num_seconds % 60),
-                3600..=86_399 => format!("-{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
+                3600..=86399 => format!("-{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
                 _ => format!(
                     "-{}d {}h",
-                    num_seconds / 86_400,
-                    (num_seconds % 86_400) / 3600
+                    num_seconds / 86400,
+                    (num_seconds % 86400) / 3600
                 ),
             };
         } else {
             return match num_seconds {
                 0..=59 => format!("{}s", num_seconds),
                 60..=3599 => format!("{}m {}s", num_seconds / 60, num_seconds % 60),
-                3600..=86_399 => format!("{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
+                3600..=86399 => format!("{}h {}m", num_seconds / 3600, (num_seconds % 3600) / 60),
                 _ => format!(
                     "{}d {}h",
-                    num_seconds / 86_400,
-                    (num_seconds % 86_400) / 3600
+                    num_seconds / 86400,
+                    (num_seconds % 86400) / 3600
                 ),
             };
         }

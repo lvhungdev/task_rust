@@ -23,6 +23,26 @@ impl Task {
             due_date,
         };
     }
+
+    pub fn get_urgency(&self) -> f64 {
+        let mut urgency: f64 = 0.0;
+        let now: NaiveDateTime = Local::now().naive_local();
+
+        if let Some(due_date) = self.due_date {
+            urgency += 0.2;
+
+            let duration = due_date.signed_duration_since(now);
+            let num_seconds = 86400.0 * 7.0 - duration.num_seconds() as f64;
+
+            if num_seconds >= 0.0 {
+                let urg_per_day = 1.0;
+                let urg_per_sec = urg_per_day / 86400.0;
+                urgency += num_seconds * urg_per_sec;
+            }
+        }
+
+        return urgency;
+    }
 }
 
 pub struct TaskManager {
@@ -40,6 +60,7 @@ impl TaskManager {
 
     pub fn load(&mut self) -> Result<()> {
         self.tasks = self.repo.get(false)?;
+        self.sort_tasks();
 
         return Ok(());
     }
@@ -53,10 +74,21 @@ impl TaskManager {
             return Err(Error(ErrorKind::Input("name cannot be blank".to_string())));
         }
 
-        self.tasks.push(Task::new(name, due_date));
+        let task = Task::new(name, due_date);
+        let created_date = task.created_date;
+
+        self.tasks.push(task);
         self.repo.add(self.tasks.last().unwrap())?;
 
-        return Ok(self.tasks.len() - 1);
+        self.sort_tasks();
+
+        let index = self
+            .tasks
+            .iter()
+            .position(|m| m.created_date == created_date)
+            .unwrap();
+
+        return Ok(index);
     }
 
     pub fn complete_task(&mut self, index: usize) -> Result<usize> {
@@ -69,9 +101,20 @@ impl TaskManager {
 
                 self.repo.update(&task)?;
 
+                self.sort_tasks();
+
                 return Ok(index);
             }
             None => Err(Error(ErrorKind::Input("id not found".to_string()))),
         };
+    }
+
+    fn sort_tasks(&mut self) {
+        self.tasks.sort_by(|a, b| {
+            let a_urg = a.get_urgency();
+            let b_urg = b.get_urgency();
+
+            return b_urg.partial_cmp(&a_urg).unwrap();
+        });
     }
 }

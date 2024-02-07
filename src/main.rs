@@ -71,11 +71,12 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
         return Ok(());
     }
 
-    ui::Table::new(3)
+    ui::Table::new(4)
         .with_header(vec![
             "Id".to_string(),
             "Description".to_string(),
             "Due".to_string(),
+            "Urg".to_string(),
         ])
         .with_content(
             manager
@@ -90,6 +91,7 @@ fn handle_list(manager: &mut TaskManager) -> Result<()> {
                             Some(due) => TimeConverter::get_relative_time_since_now(due),
                             None => "".to_string(),
                         },
+                        format!("{:.2}", m.get_urgency()),
                     ]
                 })
                 .collect(),
